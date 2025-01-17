@@ -18,7 +18,20 @@ jobs:
           hdiutil detach /Volumes/AnyDesk
           echo "AnyDesk installed successfully."
 
-      # عرض التعليمات لتشغيل AnyDesk
-      - name: Display AnyDesk Info
+      # تشغيل AnyDesk لأول مرة
+      - name: Start AnyDesk
         run: |
-          echo "AnyDesk has been installed. Open the application from /Applications/AnyDesk.app and share your AnyDesk ID for remote access."
+          echo "Starting AnyDesk..."
+          open -a /Applications/AnyDesk.app
+          echo "Please wait while AnyDesk initializes."
+
+      # عرض تعليمات للحصول على رقم AnyDesk
+      - name: Display AnyDesk Instructions
+        run: |
+          echo "To connect to this macOS device:"
+          echo "1. Open AnyDesk on macOS from /Applications/AnyDesk.app."
+          echo "2. Note the displayed AnyDesk ID and share it with the connecting device."
+          echo "3. Use the AnyDesk ID on the remote client to establish the connection."
+
+ - name: Keep Server Running
+        run: sleep 3600
