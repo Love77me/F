@@ -1,35 +1,25 @@
-name: Remote Access with AnyDesk
+name: Enable RDP on Windows
 
 on:
   workflow_dispatch:
 
 jobs:
   remote-access:
-    runs-on: macos-latest
+    runs-on: windows-latest
 
     steps:
-      # تنزيل وتثبيت AnyDesk
-      - name: Download and Install AnyDesk
+      # تفعيل RDP
+      - name: Enable RDP
         run: |
-          echo "Downloading AnyDesk..."
-          curl -L -o AnyDesk.dmg https://download.anydesk.com/anydesk.dmg
-          hdiutil attach AnyDesk.dmg
-          sudo cp -r /Volumes/AnyDesk/AnyDesk.app /Applications
-          hdiutil detach /Volumes/AnyDesk
-          echo "AnyDesk installed successfully."
+          echo "Enabling Remote Desktop Protocol (RDP)..."
+          powershell -Command "Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name 'fDenyTSConnections' -Value 0"
+          powershell -Command "Enable-NetFirewallRule -DisplayGroup 'Remote Desktop'"
+          echo "RDP enabled successfully."
 
-      # تشغيل AnyDesk لأول مرة
-      - name: Start AnyDesk
+      # عرض عنوان IP واسم المستخدم
+      - name: Display RDP Info
         run: |
-          echo "Starting AnyDesk..."
-          open -a /Applications/AnyDesk.app
-          echo "Please wait while AnyDesk initializes."
-
-      # عرض تعليمات للحصول على رقم AnyDesk
-      - name: Display AnyDesk Instructions
-        run: |
-          echo "To connect to this macOS device:"
-          echo "1. Open AnyDesk on macOS from /Applications/AnyDesk.app."
-          echo "2. Note the displayed AnyDesk ID and share it with the connecting device."
-          echo "3. Use the AnyDesk ID on the remote client to establish the connection."
-
+          echo "Your RDP connection details:"
+          echo "IP Address: $(hostname -I)"
+          echo "Username: $(whoami)"
+          echo "Use these credentials to connect via Remote Desktop."
