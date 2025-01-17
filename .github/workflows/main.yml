@@ -8,10 +8,26 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      # تثبيت RealVNC Server
-      - name: Download and Install RealVNC Server
+      # تنزيل حزمة RealVNC Server
+      - name: Download RealVNC Server
         run: |
+          echo "Downloading RealVNC Server..."
           curl -L -o VNC-Server.pkg https://www.realvnc.com/download/file/vnc.files/VNC-Server-7.6.0-MacOSX-x86_64.pkg
+          ls -lh VNC-Server.pkg
+
+      # التحقق من صحة الحزمة
+      - name: Verify Package
+        run: |
+          if [ ! -f "VNC-Server.pkg" ]; then
+            echo "VNC-Server.pkg was not downloaded correctly."
+            exit 1
+          fi
+          echo "Package downloaded successfully."
+
+      # تثبيت الحزمة
+      - name: Install RealVNC Server
+        run: |
+          echo "Installing RealVNC Server..."
           sudo installer -pkg VNC-Server.pkg -target /
           which vncserver || echo "RealVNC Server installation failed!"
 
