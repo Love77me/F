@@ -1,0 +1,55 @@
+name: Capture Screenshot and Upload to GoFile.io
+
+on:
+  workflow_dispatch:
+
+jobs:
+  remote-access:
+    runs-on: windows-latest
+
+    steps:
+      # 1. تثبيت Python
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      # 2. تثبيت المكتبات المطلوبة
+      - name: Install Required Libraries
+        run: |
+          pip install requests pillow
+
+      # 3. التقاط لقطة شاشة ورفعها إلى GoFile.io
+      - name: Capture Screenshot and Upload
+        run: |
+          echo "Capturing screenshot and uploading to GoFile.io..."
+
+          python - <<EOF
+import requests
+from PIL import ImageGrab
+
+# Capture screenshot
+screenshot = ImageGrab.grab()
+screenshot.save("screenshot.png")
+
+# Upload screenshot to GoFile.io
+with open("screenshot.png", "rb") as file:
+    response = requests.post(
+        'https://api.gofile.io/uploadFile',
+        files={'file': ('screenshot.png', file)}
+    )
+
+# Parse the response and print the download link
+data = response.json()
+if data['status'] == 'ok':
+    print("Screenshot uploaded to GoFile.io")
+    print("Download Link:", data['data']['downloadPage'])
+else:
+    print("Failed to upload to GoFile.io:", data)
+EOF
+
+      # 4. إبقاء الخادم قيد التشغيل
+      - name: Keep the Server Running
+        run: |
+          echo "Server is active. Screenshot has been uploaded to GoFile.io."
+          timeout /t 3600
