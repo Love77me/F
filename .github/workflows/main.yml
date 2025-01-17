@@ -1,4 +1,4 @@
-name: Enable RDP on Windows
+name: Enable RDP and Show IP
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # تفعيل RDP
+      # 1. تفعيل RDP
       - name: Enable RDP
         run: |
           echo "Enabling Remote Desktop Protocol (RDP)..."
@@ -16,10 +16,15 @@ jobs:
           powershell -Command "Enable-NetFirewallRule -DisplayGroup 'Remote Desktop'"
           echo "RDP enabled successfully."
 
-      # عرض عنوان IP واسم المستخدم
-      - name: Display RDP Info
+      # 2. عرض عنوان IP
+      - name: Display IP Address
         run: |
-          echo "Your RDP connection details:"
-          echo "IP Address: $(hostname -I)"
-          echo "Username: $(whoami)"
-          echo "Use these credentials to connect via Remote Desktop."
+          echo "Fetching IP address..."
+          for /f "tokens=2 delims=[]" %A in ('ping -4 -n 1 $(hostname)') do echo IP Address: %A
+          powershell -Command "(Get-NetIPAddress -AddressFamily IPv4).IPAddress | Out-String"
+
+      # 3. إبقاء الجهاز قيد التشغيل
+      - name: Keep Machine Alive
+        run: |
+          echo "RDP is enabled. Keep this session running for remote access."
+          timeout /t 3600
