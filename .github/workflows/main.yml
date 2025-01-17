@@ -1,4 +1,4 @@
-name: Remote Access to macOS with VNC
+name: Remote Access to macOS with RealVNC
 
 on:
   workflow_dispatch:
@@ -8,26 +8,19 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      # تثبيت TigerVNC مباشرة من المصدر الرسمي
-      - name: Download and Install TigerVNC
+      # تثبيت RealVNC Server
+      - name: Download and Install RealVNC Server
         run: |
-          curl -L -o tigervnc-macos.dmg https://downloads.sourceforge.net/project/tigervnc/stable/1.13.0/TigerVNC-1.13.0.dmg
-          hdiutil attach tigervnc-macos.dmg
-          sudo installer -pkg /Volumes/TigerVNC/TigerVNC-*.pkg -target /
-          hdiutil detach /Volumes/TigerVNC
-          which vncserver || echo "TigerVNC installation failed!"
+          curl -L -o VNC-Server.pkg https://www.realvnc.com/download/file/vnc.files/VNC-Server-7.6.0-MacOSX-x86_64.pkg
+          sudo installer -pkg VNC-Server.pkg -target /
+          which vncserver || echo "RealVNC Server installation failed!"
 
-      # إعداد شاشة افتراضية
-      - name: Start Virtual Display
+      # إعداد RealVNC Server
+      - name: Configure RealVNC Server
         run: |
-          Xvfb :1 -screen 0 1024x768x16 &
-          export DISPLAY=:1
-
-      # تشغيل خادم VNC
-      - name: Start VNC Server
-        run: |
-          vncserver :1 -geometry 1024x768 -localhost no -SecurityTypes None
-          echo "VNC Server is running on port 5901"
+          sudo /Library/vnc/vncserver -adduser $USER
+          sudo /Library/vnc/vncserver -service -start
+          echo "RealVNC Server is running."
 
       # تشغيل Cloudflare Tunnel
       - name: Install and Start Cloudflare Tunnel
@@ -35,7 +28,7 @@ jobs:
           curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz -o cloudflared.tgz
           tar -xvzf cloudflared.tgz
           sudo mv cloudflared /usr/local/bin/cloudflared
-          cloudflared tunnel --url vnc://localhost:5901 > /dev/null &
+          cloudflared tunnel --url vnc://localhost:5900 > /dev/null &
           sleep 5
           echo "Cloudflare Tunnel URL:"
           cloudflared tunnel list
