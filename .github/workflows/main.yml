@@ -8,23 +8,14 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      # تثبيت Homebrew يدويًا
-      - name: Install Homebrew
+      # تثبيت TigerVNC مباشرة من المصدر الرسمي
+      - name: Download and Install TigerVNC
         run: |
-          echo 'Installing Homebrew manually...'
-          mkdir -p /opt/homebrew
-          curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C /opt/homebrew
-          echo 'Adding Homebrew to PATH...'
-          echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
-          eval "$(/opt/homebrew/bin/brew shellenv)"
-          brew --version
-
-      # تثبيت TigerVNC باستخدام الاسم الصحيح
-      - name: Install TigerVNC
-        run: |
-          brew install tiger-vnc
-          brew install --cask tigervnc-viewer
-          brew install --cask xquartz
+          curl -L -o tigervnc-macos.dmg https://downloads.sourceforge.net/project/tigervnc/stable/1.13.0/TigerVNC-1.13.0.dmg
+          hdiutil attach tigervnc-macos.dmg
+          sudo installer -pkg /Volumes/TigerVNC/TigerVNC-*.pkg -target /
+          hdiutil detach /Volumes/TigerVNC
+          which vncserver || echo "TigerVNC installation failed!"
 
       # إعداد شاشة افتراضية
       - name: Start Virtual Display
