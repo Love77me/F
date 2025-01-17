@@ -1,4 +1,4 @@
-name: Remote Access with GoFile
+name: Remote
 
 on:
   workflow_dispatch:
