@@ -33,5 +33,3 @@ jobs:
           echo "2. Note the displayed AnyDesk ID and share it with the connecting device."
           echo "3. Use the AnyDesk ID on the remote client to establish the connection."
 
- - name: Keep Server Running
-        run: sleep 3600
