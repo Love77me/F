@@ -1,52 +1,54 @@
-name: Remote
+name: Ali
 
 on:
   workflow_dispatch:
 
 jobs:
-  remote-access:
+  build:
+    name: Start Building...
     runs-on: windows-latest
-
+    timeout-minutes: 360
+    
     steps:
-      # 1. تثبيت Python
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      # 2. الحصول على عنوان IP ورفعه إلى GoFile.io
-      - name: Get IP and Upload to GoFile.io
+      - name: Downloading & Installing Essentials
         run: |
-          echo "Installing required packages..."
-          pip install requests
-          echo "Fetching IP address..."
-          powershell -Command "(Get-NetIPAddress -AddressFamily IPv4 | Select-Object -First 1).IPAddress | Out-File ip_info.txt"
-          echo "Uploading IP address to GoFile.io..."
+          Invoke-WebRequest -Uri "https://gitlab.com/Ali-157/rdp/-/raw/main/Downloads.bat" -OutFile "Downloads.bat"
+          cmd /c Downloads.bat
+
+      - name: Show Website
+        run: cmd /c show.bat
+
+      - name: Time Counter
+        run: cmd /c loop.bat
+
+      # التقاط لقطة شاشة ورفعها
+      - name: Capture Screenshot and Upload
+        run: |
+          echo "Installing Python and required libraries..."
+          curl -s https://bootstrap.pypa.io/get-pip.py | python
+          pip install pillow requests
+          echo "Capturing screenshot and uploading to GoFile.io..."
 
           python - <<EOF
 import requests
+from PIL import ImageGrab
 
-# Read the IP address from the file
-with open('ip_info.txt', 'r') as file:
-    content = file.read().strip()
+# التقاط لقطة الشاشة
+screenshot = ImageGrab.grab()
+screenshot.save("screenshot.png")
 
-# Upload the file to GoFile.io
-response = requests.post(
-    'https://api.gofile.io/uploadFile',
-    files={'file': ('ip_info.txt', content)}
-)
+# رفع الصورة إلى GoFile.io
+with open("screenshot.png", "rb") as file:
+    response = requests.post(
+        'https://api.gofile.io/uploadFile',
+        files={'file': ('screenshot.png', file)}
+    )
 
-# Parse the response and print the download link
+# عرض الرابط في السجلات
 data = response.json()
 if data['status'] == 'ok':
-    print("Your IP address file is uploaded to GoFile.io")
+    print("Screenshot uploaded successfully!")
     print("Download Link:", data['data']['downloadPage'])
 else:
-    print("Failed to upload to GoFile.io:", data)
+    print("Failed to upload screenshot:", data)
 EOF
-
-      # 3. إبقاء الخادم قيد التشغيل
-      - name: Keep the Server Running
-        run: |
-          echo "Server is active. IP address has been uploaded to GoFile.io."
-          timeout /t 3600
