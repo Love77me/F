@@ -1,4 +1,4 @@
-name: Remote Access to macOS with RealVNC
+name: Remote Access with AnyDesk
 
 on:
   workflow_dispatch:
@@ -8,43 +8,17 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      # تنزيل RealVNC Server مع التحقق من الرابط
-      - name: Download RealVNC Server
+      # تنزيل وتثبيت AnyDesk
+      - name: Download and Install AnyDesk
         run: |
-          echo "Downloading RealVNC Server..."
-          curl -L -o VNC-Server.pkg https://downloads.realvnc.com/download/file/vncserver.latest/macos
-          echo "Verifying the package..."
-          if [ ! -f "VNC-Server.pkg" ] || [ $(stat -f%z "VNC-Server.pkg") -lt 10000 ]; then
-            echo "The package download seems invalid or incomplete."
-            exit 1
-          fi
-          ls -lh VNC-Server.pkg
+          echo "Downloading AnyDesk..."
+          curl -L -o AnyDesk.dmg https://download.anydesk.com/anydesk.dmg
+          hdiutil attach AnyDesk.dmg
+          sudo cp -r /Volumes/AnyDesk/AnyDesk.app /Applications
+          hdiutil detach /Volumes/AnyDesk
+          echo "AnyDesk installed successfully."
 
-      # تثبيت الحزمة
-      - name: Install RealVNC Server
+      # عرض التعليمات لتشغيل AnyDesk
+      - name: Display AnyDesk Info
         run: |
-          echo "Installing RealVNC Server..."
-          sudo installer -pkg VNC-Server.pkg -target /
-          which vncserver || echo "RealVNC Server installation failed!"
-
-      # إعداد RealVNC Server
-      - name: Configure RealVNC Server
-        run: |
-          sudo /Library/vnc/vncserver -adduser $USER
-          sudo /Library/vnc/vncserver -service -start
-          echo "RealVNC Server is running."
-
-      # تشغيل Cloudflare Tunnel
-      - name: Install and Start Cloudflare Tunnel
-        run: |
-          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz -o cloudflared.tgz
-          tar -xvzf cloudflared.tgz
-          sudo mv cloudflared /usr/local/bin/cloudflared
-          cloudflared tunnel --url vnc://localhost:5900 > /dev/null &
-          sleep 5
-          echo "Cloudflare Tunnel URL:"
-          cloudflared tunnel list
-
-      # إبقاء الخادم قيد التشغيل
-      - name: Keep Server Running
-        run: sleep 3600
+          echo "AnyDesk has been installed. Open the application from /Applications/AnyDesk.app and share your AnyDesk ID for remote access."
