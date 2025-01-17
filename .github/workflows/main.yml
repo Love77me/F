@@ -8,7 +8,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      # تثبيت Homebrew مباشرة
+      # تثبيت Homebrew يدويًا
       - name: Install Homebrew
         run: |
           echo 'Installing Homebrew manually...'
@@ -19,10 +19,11 @@ jobs:
           eval "$(/opt/homebrew/bin/brew shellenv)"
           brew --version
 
-      # تثبيت TigerVNC وXQuartz (الضروري لتشغيل VNC)
-      - name: Install TigerVNC and XQuartz
+      # تثبيت TigerVNC باستخدام الاسم الصحيح
+      - name: Install TigerVNC
         run: |
-          brew install tigervnc
+          brew install tiger-vnc
+          brew install --cask tigervnc-viewer
           brew install --cask xquartz
 
       # إعداد شاشة افتراضية
