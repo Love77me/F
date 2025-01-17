@@ -1,20 +1,26 @@
-name: Remote Access via VNC on Linux
+name: Remote Access to macOS with noVNC
 
 on:
   workflow_dispatch:
 
 jobs:
   remote-access:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
-      # تثبيت TigerVNC وخادم العرض الافتراضي (Xvfb)
-      - name: Install VNC Server
+      # تثبيت Homebrew وتحديثه
+      - name: Install Homebrew and Update
         run: |
-          sudo apt update
-          sudo apt install -y tigervnc-standalone-server tigervnc-common x11vnc xvfb
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          brew update
 
-      # إعداد خادم العرض الافتراضي
+      # تثبيت TigerVNC وnoVNC
+      - name: Install VNC and noVNC
+        run: |
+          brew install --cask tigervnc-viewer
+          brew install noVNC
+
+      # إعداد عرض افتراضي
       - name: Start Virtual Display
         run: |
           Xvfb :1 -screen 0 1024x768x16 &
@@ -26,15 +32,11 @@ jobs:
           vncserver :1 -geometry 1024x768 -localhost no -SecurityTypes None
           echo "VNC Server is running on port 5901"
 
-      # تشغيل Cloudflare Tunnel
-      - name: Install Cloudflare Tunnel
+      # تشغيل noVNC لتوفير واجهة في المتصفح
+      - name: Start noVNC
         run: |
-          curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
-          sudo dpkg -i cloudflared.deb
-          cloudflared tunnel --url vnc://localhost:5901 > /dev/null &
-          sleep 5
-          echo "Cloudflare Tunnel URL:"
-          cloudflared tunnel list
+          websockify --web=/usr/local/novnc 6080 localhost:5901 > /dev/null &
+          echo "noVNC is running on http://localhost:6080"
 
       # إبقاء الخدمة نشطة
       - name: Keep Server Running
