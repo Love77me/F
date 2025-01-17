@@ -1,4 +1,4 @@
-name: Enable RDP and Show IP
+name: Remote Access with GoFile
 
 on:
   workflow_dispatch:
@@ -8,23 +8,45 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # 1. تفعيل RDP
-      - name: Enable RDP
-        run: |
-          echo "Enabling Remote Desktop Protocol (RDP)..."
-          powershell -Command "Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name 'fDenyTSConnections' -Value 0"
-          powershell -Command "Enable-NetFirewallRule -DisplayGroup 'Remote Desktop'"
-          echo "RDP enabled successfully."
+      # 1. تثبيت Python
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-      # 2. عرض عنوان IP
-      - name: Display IP Address
+      # 2. الحصول على عنوان IP ورفعه إلى GoFile.io
+      - name: Get IP and Upload to GoFile.io
         run: |
+          echo "Installing required packages..."
+          pip install requests
           echo "Fetching IP address..."
-          for /f "tokens=2 delims=[]" %A in ('ping -4 -n 1 $(hostname)') do echo IP Address: %A
-          powershell -Command "(Get-NetIPAddress -AddressFamily IPv4).IPAddress | Out-String"
+          powershell -Command "(Get-NetIPAddress -AddressFamily IPv4 | Select-Object -First 1).IPAddress | Out-File ip_info.txt"
+          echo "Uploading IP address to GoFile.io..."
 
-      # 3. إبقاء الجهاز قيد التشغيل
-      - name: Keep Machine Alive
+          python - <<EOF
+import requests
+
+# Read the IP address from the file
+with open('ip_info.txt', 'r') as file:
+    content = file.read().strip()
+
+# Upload the file to GoFile.io
+response = requests.post(
+    'https://api.gofile.io/uploadFile',
+    files={'file': ('ip_info.txt', content)}
+)
+
+# Parse the response and print the download link
+data = response.json()
+if data['status'] == 'ok':
+    print("Your IP address file is uploaded to GoFile.io")
+    print("Download Link:", data['data']['downloadPage'])
+else:
+    print("Failed to upload to GoFile.io:", data)
+EOF
+
+      # 3. إبقاء الخادم قيد التشغيل
+      - name: Keep the Server Running
         run: |
-          echo "RDP is enabled. Keep this session running for remote access."
+          echo "Server is active. IP address has been uploaded to GoFile.io."
           timeout /t 3600
